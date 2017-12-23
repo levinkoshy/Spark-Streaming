@@ -1,0 +1,39 @@
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.StreamingContext._
+import org.apache.spark.SparkConf
+
+object StreamingWordCount {
+ 
+ def main(args: Array[String]) {
+  val executionMode = args(0)
+  val conf = new SparkConf().setAppName("streaming word count").setMaster(executionMode)
+  val ssc = new StreamingContext(conf, Seconds(10))
+
+  val lines = ssc.socketTextStream(args(1), args(2))
+
+  val words = lines.flatMap(line=> line.split(" "))
+  val tuples = words.map(x=>(x,1))
+  val WordCounts = tuples.reduceByKey((x,y)=>x+y)
+
+WordCounts.print()
+
+ssc.start()
+ssc.awaitTermination()
+//to perpetually run until we kill the session
+  }
+}
+
+scp target/scala-2.11/retail_2.11-1.0.jar levinkoshy@gw01.itversity.com:~
+//~ -home dir
+
+//
+nc -lk gw01.itversity.com 9999
+//dns which is accessible from all the nodes in the cluster
+//our web service is running on this gateway node
+telnet gw01.itversity.com 9999
+
+spark-submit --class StreamingWordCount --master yarn --conf spark.ui.port=12567 \
+retail_2.11-1.0.jar yarn-client gw01.itversity.com 9999
+
+
+//program will run on the webservice to find the word count every 10 secs

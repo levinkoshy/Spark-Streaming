@@ -1,0 +1,28 @@
+import org.apache.spark.streaming
+
+import org.apache.spark.SparkConf
+
+sc.stop
+//both cant run together
+
+val conf = new SparkConf().setAppName("streaming").setMaster("yarn-client")
+
+val ssc = new StreamingContext(conf, Seconds(10))
+
+//seconds -- frequency of streaming
+
+-----
+//out of spark shell
+nc -lk 9999
+//starts a web-service
+
+//in another terminal
+nc localhost 9999
+//interact with the web service-- send messages
+
+
+//on windows
+nc -l -p 9999
+
+//another terminal
+nc localhost 9999

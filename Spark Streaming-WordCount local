@@ -1,0 +1,21 @@
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.StreamingContext._
+import org.apache.spark.SparkConf
+val conf = new SparkConf().setAppName("streaming word count").setMaster("local")
+val ssc = new StreamingContext(conf, Seconds(10))
+
+val lines = ssc.socketTextStream("localhost", 9999)
+//it will create a D-stream(discretized streams) of data which will be streamed into this IP address and port number
+//every 10 secs, an RDD will be created
+
+val words = lines.flatMap(line=> line.split(" "))
+val tuples = words.map(x=>(x,1))
+val WordCounts = tuples.reduceByKey((x,y)=>x+y)
+
+WordCounts.print()
+
+ssc.start()
+ssc.awaitTermination()
+
+
+
