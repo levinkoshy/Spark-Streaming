@@ -1,2 +1,58 @@
 //Spark-streaming
 //Department-wise traffic
+
+//we use get_logs application which continuosly sends message to the log files situated in "/opt/gen_logs/logs/"
+//file-name: access.log
+//populated by tool named gen_logs
+
+tail_logs.sh 
+//used to validate that the message is continuosly received by access.log
+
+
+//Ip address of a person visiting a website
+//classes required only for this program
+
+//args[1]-ip address where the webservice is running
+import org.apache.spark.SparkConf
+import org.apache.spark.streaming._
+
+
+object StreamingDepartmentWordCount {
+        def main(args: Array[String]){
+     val conf = new SparkConf().setAppName("Streaming Word Count").setMaster(args(0))
+     val ssc = new StreamingContext(conf,Seconds(30))
+
+     val messages = ssc.socketTextStream(args(1),args(2).toInt)
+     val departmentMessages = messages.
+     filter(x=> {
+        val endPoint = x.split(" ")(6)
+        endPoint.split("/")(1) == "department"
+     } )
+     val departments = departmentMessages.
+     map(x=>{
+      val endPoint = x.split(" ")(6)
+      (endPoint.split("/")(2),1)
+      } )
+
+     val departmentTraffic =  departments.reduceByKey((x,y)=>x+y)
+     departmentTraffic.saveAsTextFiles("/user/levinkoshy/deptwisetraffic/cnt")
+
+     ssc.start()
+     ssc.awaitTermination()
+   }
+}
+
+
+scp target/scala-2.11/retail_2.11-1.0.jar levinkoshy@gw01.itversity.com:~
+
+
+
+//To direct the gen_logs streaming messages to be accessible among all the nodes
+//piped to the gateway node
+
+tail_logs.sh|nc -lk gw01.itversity.com 8123
+
+telnet gw01.itversity.com 8123
+
+spark-submit --class StreamingDepartmentWordCount --master yarn --conf spark.ui.port=12567 \
+retail_2.11-1.0.jar yarn-client gw01.itversity.com 8123

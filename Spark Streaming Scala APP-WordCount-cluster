@@ -30,7 +30,9 @@ scp target/scala-2.11/retail_2.11-1.0.jar levinkoshy@gw01.itversity.com:~
 nc -lk gw01.itversity.com 9999
 //dns which is accessible from all the nodes in the cluster
 //our web service is running on this gateway node
+
 telnet gw01.itversity.com 9999
+//to send msg to the above webservice
 
 spark-submit --class StreamingWordCount --master yarn --conf spark.ui.port=12567 \
 retail_2.11-1.0.jar yarn-client gw01.itversity.com 9999
